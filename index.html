@@ -61,7 +61,8 @@
             height: 100vh;
             opacity: 0;
             transition: opacity 1s ease;
-            flex-direction: row; 
+            display: flex;
+            flex-direction: row; /* Por defecto en PC: lado a lado */
         }
 
         .mitad {
@@ -72,44 +73,46 @@
             position: relative;
         }
 
-        /* TEXTO (IZQUIERDA) */
+        /* TEXTO */
         .seccion-texto {
-            max-width: 90%;
+            width: 90%;
+            max-width: 500px;
             padding: 20px;
             color: var(--texto-p);
             opacity: 0;
-            transform: translateX(-30px);
+            transform: translateY(20px);
             transition: all 1.5s ease;
             text-align: center;
+            z-index: 10;
         }
-        .seccion-texto.mostrar { opacity: 1; transform: translateX(0); }
-        .titulo { font-size: calc(1.5rem + 1vw); font-weight: bold; margin-bottom: 10px; }
-        #contador { font-size: calc(1rem + 0.5vw); font-weight: bold; color: var(--texto-s); }
+        .seccion-texto.mostrar { opacity: 1; transform: translateY(0); }
+        .titulo { font-size: calc(1.4rem + 1vw); font-weight: bold; margin-bottom: 10px; line-height: 1.2; }
+        #contador { font-size: calc(1rem + 0.5vw); font-weight: bold; color: var(--texto-s); margin-top: 10px; }
 
-        /* ÁRBOL (DERECHA) */
+        /* ÁRBOL */
         .contenedor-arbol {
             position: relative;
             width: 100%;
-            max-width: 350px; /* Tamaño del árbol reducido */
-            height: 80vh;
+            max-width: 380px; 
+            height: 70vh;
             display: flex;
             justify-content: center;
+            align-items: flex-end;
         }
         .wrap-arbol {
             position: absolute;
-            bottom: -50px; /* Ajuste manual vertical del árbol */
-            width: 85%;   
+            bottom: 0; 
+            width: 90%;   
             height: 0;
             overflow: hidden;
             z-index: 1;
         }
         .wrap-arbol img { width: 100%; display: block; }
 
-        /* GIRASOLES */
         .flor, .flor-destello {
             position: absolute;
-            width: 18px; 
-            height: 18px;
+            width: 16px; 
+            height: 16px;
             opacity: 0;
             z-index: 2;
             pointer-events: none;
@@ -122,10 +125,33 @@
 
         .suelo {
             position: absolute;
-            bottom: 95px; 
-            width: 70%;
+            bottom: 0; 
+            width: 80%;
             height: 2px;
-            background: rgba(62, 39, 35, 0.15);
+            background: rgba(62, 39, 35, 0.1);
+        }
+
+        /* --- CORRECCIÓN CRÍTICA PARA MÓVILES --- */
+        @media (max-width: 768px) {
+            .escena { 
+                flex-direction: column; /* Texto arriba, árbol abajo */
+                justify-content: flex-start;
+            }
+            .mitad.izquierda { 
+                flex: 0.4; /* Espacio para el texto */
+                align-items: center;
+                padding-top: 40px;
+            }
+            .mitad.derecha { 
+                flex: 0.6; /* Espacio para el árbol */
+                align-items: flex-end; 
+                padding-bottom: 20px;
+            }
+            .contenedor-arbol { 
+                height: 50vh; 
+                max-width: 280px; /* Árbol más pequeño para que quepa bien */
+            }
+            .titulo { font-size: 1.5rem; }
         }
 
         /* ANIMACIONES */
@@ -134,17 +160,6 @@
             100% { transform: translate(calc(var(--startX) - var(--viento)), 110vh) rotate(720deg); opacity: 0; }
         }
         @keyframes crecerArbol { from { height: 0; } to { height: 100%; } }
-
-        /* ADAPTACIÓN MÓVIL */
-        @media (max-width: 768px) {
-            .escena { flex-direction: column; }
-            .mitad.izquierda { flex: 0.4; align-items: flex-end; }
-            .mitad.derecha { flex: 0.6; align-items: flex-start; }
-            .contenedor-arbol { transform: scale(0.85); height: 60vh; }
-            .seccion-texto { padding: 10px; }
-            .wrap-arbol { bottom: 50px; }
-            .suelo { bottom: 50px; }
-        }
     </style>
 </head>
 <body onclick="destelloRedondo(event)">
@@ -160,7 +175,7 @@
         </div>
     </div>
 
-    <div class="escena" id="escena">
+    <div class="escena" id="escena" style="display: none;">
         <div class="mitad izquierda">
             <div class="seccion-texto" id="texto">
                 <div class="titulo">Flores? Amarillas para la color canela 👻:</div>
@@ -190,16 +205,14 @@
             const h = Math.floor((diff / 3600000) % 24);
             const m = Math.floor((diff / 60000) % 60);
             const s = Math.floor((diff / 1000) % 60);
-            document.getElementById("contador").innerText = `${d} días ${h}h ${m}m ${s}s`;
+            document.getElementById("contador").innerText = `${d}d ${h}h ${m}m ${s}s`;
         }
 
         function iniciar(e) {
             e.stopPropagation();
-
-            // AJUSTE DE VOLUMEN Y REPRODUCCIÓN
             const cancion = document.getElementById("miMusica");
-            cancion.volume = 0.3; // 40% de volumen (ajusta de 0.0 a 1.0)
-            cancion.play().catch(error => console.log("Audio bloqueado"));
+            cancion.volume = 0.4; 
+            cancion.play().catch(() => {});
 
             document.getElementById("inicio").style.opacity = "0";
             setTimeout(() => {
@@ -223,11 +236,10 @@
             setInterval(actualizarContador, 1000);
         }
 
-        // DESTELLO REDONDO CON CAÍDA NATURAL
         function destelloRedondo(e) {
             if (!interactividadActiva) return;
-            const cantidad = 20; 
-            const radio = window.innerWidth < 768 ? 70 : 110; 
+            const cantidad = 15; 
+            const radio = window.innerWidth < 768 ? 60 : 100; 
 
             for (let i = 0; i < cantidad; i++) {
                 const flor = document.createElement("img");
@@ -245,15 +257,13 @@
                 flor.style.opacity = "1";
                 flor.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random() * 360}deg)`;
 
-                // FISICA DE CAÍDA DESFASADA (NATURAL)
-                const delayCaida = 400 + Math.random() * 1200; 
-                const duracionCaida = 4 + Math.random() * 4; 
-                const fuerzaViento = 150 + Math.random() * 250;
+                const delayCaida = 500 + Math.random() * 1000; 
+                const duracionCaida = 4 + Math.random() * 3; 
 
                 setTimeout(() => {
                     flor.style.setProperty('--startX', `${tx}px`);
                     flor.style.setProperty('--startY', `${ty}px`);
-                    flor.style.setProperty('--viento', `${fuerzaViento}px`);
+                    flor.style.setProperty('--viento', `${100 + Math.random() * 200}px`);
                     flor.style.animation = `caerNatural ${duracionCaida}s linear forwards`;
                     setTimeout(() => flor.remove(), duracionCaida * 1000);
                 }, delayCaida);
@@ -262,10 +272,10 @@
 
         function generarCorazon() {
             const cont = document.getElementById("contenedor");
-            const total = window.innerWidth < 768 ? 600 : 1100; 
+            const total = window.innerWidth < 768 ? 500 : 1000; 
             const centroX = cont.offsetWidth / 2;
             const centroY = cont.offsetHeight * 0.35; 
-            const escalaX = cont.offsetWidth * 0.4; 
+            const escalaX = cont.offsetWidth * 0.42; 
             const escalaY = escalaX * 0.95; 
 
             for (let i = 0; i < total; i++) {
@@ -281,21 +291,21 @@
                 flor.className = "flor";
                 const posX = centroX + (x * escalaX);
                 const posY = centroY - (y * escalaY); 
-                flor.style.left = (posX - 9) + "px"; 
-                flor.style.top = (posY - 9) + "px";
+                flor.style.left = (posX - 8) + "px"; 
+                flor.style.top = (posY - 8) + "px";
                 cont.appendChild(flor);
 
                 setTimeout(() => {
                     flor.style.opacity = "1";
-                    flor.style.transform = `scale(${0.4 + Math.random() * 0.7}) rotate(${Math.random() * 360}deg)`;
+                    flor.style.transform = `scale(${0.3 + Math.random() * 0.6}) rotate(${Math.random() * 360}deg)`;
                     
-                    if (Math.random() > 0.88) { 
+                    if (Math.random() > 0.9) { 
                         setTimeout(() => {
                             flor.style.setProperty('--startX', '0px');
                             flor.style.setProperty('--startY', '0px');
-                            flor.style.setProperty('--viento', `${200 + Math.random() * 200}px`);
-                            flor.style.animation = `caerNatural ${5 + Math.random()*5}s linear forwards`;
-                        }, 4000 + Math.random()*10000);
+                            flor.style.setProperty('--viento', `${150 + Math.random() * 150}px`);
+                            flor.style.animation = `caerNatural ${6 + Math.random()*4}s linear forwards`;
+                        }, 5000 + Math.random()*15000);
                     }
                 }, Math.random() * 3000);
             }
