@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flores Amarillas lilian 🌻</title>
+    <style>
+        :root {
+            --fondo: linear-gradient(135deg, #ffffff 0%, #ffebf0 100%);
+            --texto-p: #5d4037;
+            --texto-s: #3e2723;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--fondo);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            overflow: hidden;
+            user-select: none; 
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* PANTALLA DE INICIO */
+        .inicio {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--fondo);
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            z-index: 100; 
+            transition: opacity 1s ease;
+        }
+
+        .boton-inicio {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .boton-inicio:hover { transform: scale(1.2); }
+        .boton-inicio img { width: 100px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1)); }
+        .boton-inicio span {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--texto-p);
+            text-transform: uppercase;
+        }
+
+        /* ESCENA PRINCIPAL */
+        .escena {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 1s ease;
+            flex-direction: row; 
+        }
+
+        .mitad {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* TEXTO (IZQUIERDA) */
+        .seccion-texto {
+            max-width: 90%;
+            padding: 20px;
+            color: var(--texto-p);
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 1.5s ease;
+            text-align: center;
+        }
+        .seccion-texto.mostrar { opacity: 1; transform: translateX(0); }
+        .titulo { font-size: calc(1.5rem + 1vw); font-weight: bold; margin-bottom: 10px; }
+        #contador { font-size: calc(1rem + 0.5vw); font-weight: bold; color: var(--texto-s); }
+
+        /* ÁRBOL (DERECHA) */
+        .contenedor-arbol {
+            position: relative;
+            width: 100%;
+            max-width: 350px; /* Tamaño del árbol reducido */
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+        }
+        .wrap-arbol {
+            position: absolute;
+            bottom: -50px; /* Ajuste manual vertical del árbol */
+            width: 85%;   
+            height: 0;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .wrap-arbol img { width: 100%; display: block; }
+
+        /* GIRASOLES */
+        .flor, .flor-destello {
+            position: absolute;
+            width: 18px; 
+            height: 18px;
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .flor-destello { 
+            z-index: 10; 
+            transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); 
+        }
+
+        .suelo {
+            position: absolute;
+            bottom: 95px; 
+            width: 70%;
+            height: 2px;
+            background: rgba(62, 39, 35, 0.15);
+        }
+
+        /* ANIMACIONES */
+        @keyframes caerNatural {
+            0% { transform: translate(var(--startX), var(--startY)) rotate(0deg); opacity: 1; }
+            100% { transform: translate(calc(var(--startX) - var(--viento)), 110vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes crecerArbol { from { height: 0; } to { height: 100%; } }
+
+        /* ADAPTACIÓN MÓVIL */
+        @media (max-width: 768px) {
+            .escena { flex-direction: column; }
+            .mitad.izquierda { flex: 0.4; align-items: flex-end; }
+            .mitad.derecha { flex: 0.6; align-items: flex-start; }
+            .contenedor-arbol { transform: scale(0.85); height: 60vh; }
+            .seccion-texto { padding: 10px; }
+            .wrap-arbol { bottom: 50px; }
+            .suelo { bottom: 50px; }
+        }
+    </style>
+</head>
+<body onclick="destelloRedondo(event)">
+
+    <audio id="miMusica" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="inicio" id="inicio">
+        <div class="boton-inicio" onclick="iniciar(event)">
+            <img src="girasol.png" alt="Empezar">
+            <span>Toca aquí</span>
+        </div>
+    </div>
+
+    <div class="escena" id="escena">
+        <div class="mitad izquierda">
+            <div class="seccion-texto" id="texto">
+                <div class="titulo">Flores? Amarillas para la color canela 👻:</div>
+                <p>Mi cariño por ti comenzó hace...</p>
+                <div id="contador">Calculando...</div>
+            </div>
+        </div>
+
+        <div class="mitad derecha">
+            <div class="contenedor-arbol" id="contenedor">
+                <div class="wrap-arbol" id="wrap">
+                    <img src="arbol.png" alt="Árbol">
+                </div>
+                <div class="suelo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fechaInicio = new Date(2025, 3, 16, 14, 0, 0); 
+        let interactividadActiva = false;
+
+        function actualizarContador() {
+            const ahora = new Date();
+            const diff = ahora - fechaInicio;
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff / 3600000) % 24);
+            const m = Math.floor((diff / 60000) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+            document.getElementById("contador").innerText = `${d} días ${h}h ${m}m ${s}s`;
+        }
+
+        function iniciar(e) {
+            e.stopPropagation();
+
+            // AJUSTE DE VOLUMEN Y REPRODUCCIÓN
+            const cancion = document.getElementById("miMusica");
+            cancion.volume = 0.3; // 40% de volumen (ajusta de 0.0 a 1.0)
+            cancion.play().catch(error => console.log("Audio bloqueado"));
+
+            document.getElementById("inicio").style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById("inicio").style.display = "none";
+                const escena = document.getElementById("escena");
+                escena.style.display = "flex";
+                setTimeout(() => {
+                    escena.style.opacity = "1";
+                    document.getElementById("wrap").style.animation = "crecerArbol 3s ease-out forwards";
+                    setTimeout(() => {
+                        finalizarAnimacion();
+                        setTimeout(() => interactividadActiva = true, 500); 
+                    }, 2800);
+                }, 50);
+            }, 1000);
+        }
+
+        function finalizarAnimacion() {
+            generarCorazon();
+            document.getElementById("texto").classList.add("mostrar");
+            setInterval(actualizarContador, 1000);
+        }
+
+        // DESTELLO REDONDO CON CAÍDA NATURAL
+        function destelloRedondo(e) {
+            if (!interactividadActiva) return;
+            const cantidad = 20; 
+            const radio = window.innerWidth < 768 ? 70 : 110; 
+
+            for (let i = 0; i < cantidad; i++) {
+                const flor = document.createElement("img");
+                flor.src = "girasol.png";
+                flor.className = "flor-destello"; 
+                flor.style.left = e.pageX + "px";
+                flor.style.top = e.pageY + "px";
+                document.body.appendChild(flor);
+                flor.offsetWidth; 
+
+                const angulo = (i / cantidad) * Math.PI * 2;
+                const tx = Math.cos(angulo) * radio;
+                const ty = Math.sin(angulo) * radio;
+
+                flor.style.opacity = "1";
+                flor.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random() * 360}deg)`;
+
+                // FISICA DE CAÍDA DESFASADA (NATURAL)
+                const delayCaida = 400 + Math.random() * 1200; 
+                const duracionCaida = 4 + Math.random() * 4; 
+                const fuerzaViento = 150 + Math.random() * 250;
+
+                setTimeout(() => {
+                    flor.style.setProperty('--startX', `${tx}px`);
+                    flor.style.setProperty('--startY', `${ty}px`);
+                    flor.style.setProperty('--viento', `${fuerzaViento}px`);
+                    flor.style.animation = `caerNatural ${duracionCaida}s linear forwards`;
+                    setTimeout(() => flor.remove(), duracionCaida * 1000);
+                }, delayCaida);
+            }
+        }
+
+        function generarCorazon() {
+            const cont = document.getElementById("contenedor");
+            const total = window.innerWidth < 768 ? 600 : 1100; 
+            const centroX = cont.offsetWidth / 2;
+            const centroY = cont.offsetHeight * 0.35; 
+            const escalaX = cont.offsetWidth * 0.4; 
+            const escalaY = escalaX * 0.95; 
+
+            for (let i = 0; i < total; i++) {
+                let x, y, dentro = false;
+                while (!dentro) {
+                    x = (Math.random() * 2.4) - 1.2; 
+                    y = (Math.random() * 2.4) - 1.2;
+                    if (Math.pow(x*x + y*y - 1, 3) - (x*x * Math.pow(y, 3)) <= 0) dentro = true;
+                }
+
+                const flor = document.createElement("img");
+                flor.src = "girasol.png";
+                flor.className = "flor";
+                const posX = centroX + (x * escalaX);
+                const posY = centroY - (y * escalaY); 
+                flor.style.left = (posX - 9) + "px"; 
+                flor.style.top = (posY - 9) + "px";
+                cont.appendChild(flor);
+
+                setTimeout(() => {
+                    flor.style.opacity = "1";
+                    flor.style.transform = `scale(${0.4 + Math.random() * 0.7}) rotate(${Math.random() * 360}deg)`;
+                    
+                    if (Math.random() > 0.88) { 
+                        setTimeout(() => {
+                            flor.style.setProperty('--startX', '0px');
+                            flor.style.setProperty('--startY', '0px');
+                            flor.style.setProperty('--viento', `${200 + Math.random() * 200}px`);
+                            flor.style.animation = `caerNatural ${5 + Math.random()*5}s linear forwards`;
+                        }, 4000 + Math.random()*10000);
+                    }
+                }, Math.random() * 3000);
+            }
+        }
+    </script>
+</body>
+</html>
