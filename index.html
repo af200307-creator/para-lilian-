@@ -44,7 +44,10 @@
             cursor: pointer;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .boton-inicio img { width: 85px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1)); }
+        .boton-inicio:hover { transform: scale(1.2); }
+        .boton-inicio:active { transform: scale(1.1); }
+
+        .boton-inicio img { width: 90px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1)); }
         .boton-inicio span { margin-top: 15px; font-weight: bold; color: var(--texto-p); text-transform: uppercase; letter-spacing: 1px; }
 
         /* ESCENA PRINCIPAL */
@@ -88,7 +91,7 @@
             justify-content: center;
             align-items: flex-end;
             position: relative;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
         }
 
         .contenedor-arbol {
@@ -110,6 +113,15 @@
         }
         .wrap-arbol img { width: 100%; display: block; }
 
+        .suelo {
+            position: absolute;
+            bottom: 0; 
+            width: 70%;
+            height: 2px;
+            background: rgba(62, 39, 35, 0.15);
+            z-index: 0;
+        }
+
         /* FLORES */
         .flor, .flor-destello {
             position: absolute;
@@ -118,6 +130,7 @@
             opacity: 0;
             z-index: 2;
             pointer-events: none;
+            transition: opacity 1s ease; /* Transición suave para la aparición */
         }
         .flor-destello { z-index: 10; transition: opacity 0.4s, transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1); }
 
@@ -163,6 +176,7 @@
                 <div class="wrap-arbol" id="wrap">
                     <img src="arbol.png" alt="Árbol">
                 </div>
+                <div class="suelo"></div>
             </div>
         </div>
     </div>
@@ -226,20 +240,20 @@
                 const ty = Math.sin(angulo) * radio;
                 flor.style.opacity = "1";
                 flor.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random() * 360}deg)`;
-                const duracion = 3 + Math.random() * 3;
+                const duracion = 4 + Math.random() * 3;
                 setTimeout(() => {
                     flor.style.setProperty('--startX', `${tx}px`);
                     flor.style.setProperty('--startY', `${ty}px`);
                     flor.style.setProperty('--viento', `${120 + Math.random() * 180}px`);
                     flor.style.animation = `caerNatural ${duracion}s linear forwards`;
                     setTimeout(() => flor.remove(), duracion * 1000);
-                }, 500);
+                }, 400);
             }
         }
 
         function generarCorazon() {
             const cont = document.getElementById("contenedor");
-            const total = window.innerWidth < 768 ? 500 : 950;
+            const total = window.innerWidth < 768 ? 550 : 1000;
             const centroX = cont.offsetWidth / 2;
             const centroY = cont.offsetHeight * 0.38;
             const escalaX = cont.offsetWidth * 0.44;
@@ -261,21 +275,23 @@
                 flor.style.top = (posY - 8) + "px";
                 cont.appendChild(flor);
 
-                // Aparición mucho más rápida
+                // --- CORRECCIÓN DE VELOCIDAD DE APARICIÓN ---
+                // Los girasoles ahora aparecen de forma progresiva entre 0 y 4 segundos
                 setTimeout(() => {
                     flor.style.opacity = "1";
                     flor.style.transform = `scale(${0.35 + Math.random() * 0.65}) rotate(${Math.random() * 360}deg)`;
                     
-                    // EFECTO DE CAÍDA RESTAURADO
-                    if (Math.random() > 0.85) { 
+                    // --- CORRECCIÓN DE TIEMPO DE CAÍDA ---
+                    // Ahora la caída puede empezar mucho antes (a los 1.5 segundos de aparecer)
+                    if (Math.random() > 0.88) { 
                         setTimeout(() => {
                             flor.style.setProperty('--startX', '0px');
                             flor.style.setProperty('--startY', '0px');
                             flor.style.setProperty('--viento', `${150 + Math.random() * 150}px`);
-                            flor.style.animation = `caerNatural ${5 + Math.random()*5}s linear forwards`;
-                        }, 3000 + Math.random()*12000);
+                            flor.style.animation = `caerNatural ${6 + Math.random()*4}s linear forwards`;
+                        }, 1500 + Math.random()*8000); 
                     }
-                }, Math.random() * 1500); // Reducido de 3000 a 1500ms
+                }, Math.random() * 4000); 
             }
         }
     </script>
